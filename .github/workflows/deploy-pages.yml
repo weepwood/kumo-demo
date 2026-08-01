@@ -11,6 +11,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  statuses: write
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -60,3 +61,36 @@ jobs:
       - name: 发布到 GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  report:
+    if: ${{ always() && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    steps:
+      - name: 写回部署状态
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          if [[ "$BUILD_RESULT" == "success" && "$DEPLOY_RESULT" == "success" ]]; then
+            state="success"
+            description="GitHub Pages 构建与部署成功"
+          else
+            state="failure"
+            description="Pages 失败：build=$BUILD_RESULT, deploy=$DEPLOY_RESULT"
+          fi
+
+          payload=$(jq -n \
+            --arg state "$state" \
+            --arg target_url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --arg description "$description" \
+            --arg context "github-pages/deployment" \
+            '{state: $state, target_url: $target_url, description: $description, context: $context}')
+
+          curl --fail-with-body --request POST \
+            --url "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data "$payload"
