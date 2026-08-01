@@ -15,6 +15,10 @@ GitHub Pages：<https://weepwood.github.io/kumo-demo/>
 - 推送到 `main` 后自动部署至 GitHub Pages
 - Pull Request 自动执行 TypeScript 检查和生产构建
 
+## 持续集成
+
+每次 Pull Request 都会安装依赖并运行 `pnpm build`，合并到 `main` 后自动发布 Pages 构建产物。
+
 ## 本地运行
 
 ```bash
