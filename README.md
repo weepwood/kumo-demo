@@ -13,6 +13,11 @@ GitHub Pages：<https://weepwood.github.io/kumo-demo/>
 - 模拟生产部署进度和终端日志
 - 支持桌面端、平板和移动端响应式布局
 - 推送到 `main` 后自动部署至 GitHub Pages
+- Pull Request 自动执行 TypeScript 检查和生产构建
+
+## 持续集成
+
+每次 Pull Request 都会安装依赖并运行 `pnpm build`，合并到 `main` 后自动发布 Pages 构建产物。
 
 ## 本地运行
 
